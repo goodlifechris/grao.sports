@@ -43,6 +43,9 @@ export default function EditProfileDialog({
   open,
   onOpenChange,
 }: EditProfileDialogProps) {
+  console.log("EditProfileDialog rendered with user:", user);
+  console.log("User avatarUrl:", user.avatarUrl);
+
   const form = useForm<UpdateUserProfileValues>({
     resolver: zodResolver(updateUserProfileSchema),
     defaultValues: {
@@ -54,21 +57,35 @@ export default function EditProfileDialog({
   const mutation = useUpdateProfileMutation();
 
   const [croppedAvatar, setCroppedAvatar] = useState<Blob | null>(null);
+  console.log("Current croppedAvatar state:", croppedAvatar);
 
   async function onSubmit(values: UpdateUserProfileValues) {
+    console.log("Form submitted with values:", values);
+    console.log("Current croppedAvatar:", croppedAvatar);
+
     const newAvatarFile = croppedAvatar
-      ? new File([croppedAvatar], `avatar_${user.id}.webp`)
+      ? new File([croppedAvatar], `avatar_${user.id}.webp`, { type: "image/webp" })
       : undefined;
-      https://utfs.io/f/dcc8ce0d-64a7-4204-9fe1-e7176ac2c278-9udarb.webp
+    
+    console.log("Created avatar file:", newAvatarFile);
+    if (newAvatarFile) {
+      console.log("File details - name:", newAvatarFile.name, "size:", newAvatarFile.size, "type:", newAvatarFile.type);
+    }
+
     mutation.mutate(
       {
         values,
         avatar: newAvatarFile,
       },
       {
-        onSuccess: () => {
+        onSuccess: (data) => {
+          console.log("Mutation successful! Response data:", data);
           setCroppedAvatar(null);
           onOpenChange(false);
+        },
+        onError: (error) => {
+          console.error("Mutation failed! Error:", error);
+          console.error("Error details:", error.message, error.stack);
         },
       },
     );
@@ -141,12 +158,21 @@ interface AvatarInputProps {
 }
 
 function AvatarInput({ src, onImageCropped }: AvatarInputProps) {
+  console.log("AvatarInput rendered with src:", src);
+
   const [imageToCrop, setImageToCrop] = useState<File>();
+  console.log("Current imageToCrop:", imageToCrop);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function onImageSelected(image: File | undefined) {
-    if (!image) return;
+    console.log("Image selected:", image);
+    if (!image) {
+      console.log("No image selected");
+      return;
+    }
+
+    console.log("Original image details - name:", image.name, "size:", image.size, "type:", image.type);
 
     Resizer.imageFileResizer(
       image,
@@ -155,8 +181,16 @@ function AvatarInput({ src, onImageCropped }: AvatarInputProps) {
       "WEBP",
       100,
       0,
-      (uri) => setImageToCrop(uri as File),
+      (uri) => {
+        console.log("Image resized successfully, URI:", uri);
+        setImageToCrop(uri as File);
+      },
       "file",
+      undefined,
+      undefined,
+      (error) => {
+        console.error("Image resizing failed:", error);
+      }
     );
   }
 
@@ -165,13 +199,19 @@ function AvatarInput({ src, onImageCropped }: AvatarInputProps) {
       <input
         type="file"
         accept="image/*"
-        onChange={(e) => onImageSelected(e.target.files?.[0])}
+        onChange={(e) => {
+          console.log("File input changed, files:", e.target.files);
+          onImageSelected(e.target.files?.[0]);
+        }}
         ref={fileInputRef}
         className="sr-only hidden"
       />
       <button
         type="button"
-        onClick={() => fileInputRef.current?.click()}
+        onClick={() => {
+          console.log("Avatar button clicked");
+          fileInputRef.current?.click();
+        }}
         className="group relative block"
       >
         <Image
@@ -180,6 +220,8 @@ function AvatarInput({ src, onImageCropped }: AvatarInputProps) {
           width={150}
           height={150}
           className="size-32 flex-none rounded-full object-cover"
+          onLoad={() => console.log("Avatar image loaded successfully")}
+          onError={(e) => console.error("Avatar image failed to load", e)}
         />
         <span className="absolute inset-0 m-auto flex size-12 items-center justify-center rounded-full bg-black bg-opacity-30 text-white transition-colors duration-200 group-hover:bg-opacity-25">
           <Camera size={24} />
@@ -189,8 +231,15 @@ function AvatarInput({ src, onImageCropped }: AvatarInputProps) {
         <CropImageDialog
           src={URL.createObjectURL(imageToCrop)}
           cropAspectRatio={1}
-          onCropped={onImageCropped}
+          onCropped={(blob) => {
+            console.log("Image cropped, blob:", blob);
+            if (blob) {
+              console.log("Cropped blob details - size:", blob.size, "type:", blob.type);
+            }
+            onImageCropped(blob);
+          }}
           onClose={() => {
+            console.log("Crop dialog closed");
             setImageToCrop(undefined);
             if (fileInputRef.current) {
               fileInputRef.current.value = "";
