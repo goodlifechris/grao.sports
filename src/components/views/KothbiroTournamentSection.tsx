@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 import { Calendar, MapPin, Users, Trophy } from "lucide-react";
 
 const KothbiroTournamentSection = () => {
