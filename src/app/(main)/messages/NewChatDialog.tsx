@@ -13,7 +13,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Check, Loader2, SearchIcon, X } from "lucide-react";
 import { useState } from "react";
 import { UserResponse } from "stream-chat";
-import { DefaultStreamChatGenerics, useChatContext } from "stream-chat-react";
+import { useChatContext } from "stream-chat-react";
 import { useSession } from "../SessionProvider";
 
 interface NewChatDialogProps {
@@ -34,42 +34,40 @@ export default function NewChatDialog({
   const [searchInput, setSearchInput] = useState("");
   const searchInputDebounced = useDebounce(searchInput);
 
-  const [selectedUsers, setSelectedUsers] = useState<
-    UserResponse<DefaultStreamChatGenerics>[]
-  >([]);
+  const [selectedUsers, setSelectedUsers] = useState<UserResponse[]>([]);
 
   const { data, isFetching, isError, isSuccess } = useQuery({
     queryKey: ["stream-users", searchInputDebounced],
-    queryFn: async () =>
-      client.queryUsers(
-        {
-          id: { $ne: loggedInUser.id },
-          role: { $ne: "admin" },
-          ...(searchInputDebounced
-            ? {
-                $or: [
-                  { name: { $autocomplete: searchInputDebounced } },
-                  { username: { $autocomplete: searchInputDebounced } },
-                ],
-              }
-            : {}),
-        },
+    queryFn: async () => {
+      // Build the filter object
+      const filter: any = {
+        id: { $ne: loggedInUser.id },
+      };
+
+      // Add search condition if there's a search term
+      if (searchInputDebounced) {
+        filter.$or = [
+          { name: { $autocomplete: searchInputDebounced } },
+          { username: { $autocomplete: searchInputDebounced } },
+        ];
+      }
+
+      return client.queryUsers(
+        filter,
         { name: 1, username: 1 },
         { limit: 15 },
-      ),
+      );
+    },
   });
 
   const mutation = useMutation({
     mutationFn: async () => {
-      const channel = client.channel("messaging", {
+      const channelId = `${loggedInUser.id}-${selectedUsers.map(u => u.id).sort().join('-')}-${Date.now()}`;
+      
+      const channel = client.channel("messaging", channelId, {
         members: [loggedInUser.id, ...selectedUsers.map((u) => u.id)],
-        name:
-          selectedUsers.length > 1
-            ? loggedInUser.displayName +
-              ", " +
-              selectedUsers.map((u) => u.name).join(", ")
-            : undefined,
       });
+      
       await channel.create();
       return channel;
     },
@@ -162,7 +160,7 @@ export default function NewChatDialog({
 }
 
 interface UserResultProps {
-  user: UserResponse<DefaultStreamChatGenerics>;
+  user: UserResponse;
   selected: boolean;
   onClick: () => void;
 }
@@ -186,7 +184,7 @@ function UserResult({ user, selected, onClick }: UserResultProps) {
 }
 
 interface SelectedUserTagProps {
-  user: UserResponse<DefaultStreamChatGenerics>;
+  user: UserResponse;
   onRemove: () => void;
 }
 

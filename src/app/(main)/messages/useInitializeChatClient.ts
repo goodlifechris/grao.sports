@@ -10,22 +10,30 @@ export default function useInitializeChatClient() {
   useEffect(() => {
     const client = StreamChat.getInstance(process.env.NEXT_PUBLIC_STREAM_KEY!);
 
-    client
-      .connectUser(
-        {
-          id: user.id,
-          username: user.username,
-          name: user.displayName,
-          image: user.avatarUrl,
-        },
-        async () =>
-          kyInstance
-            .get("/api/get-token")
-            .json<{ token: string }>()
-            .then((data) => data.token),
-      )
-      .catch((error) => console.error("Failed to connect user", error))
-      .then(() => setChatClient(client));
+    const connectUser = async () => {
+      try {
+        // Get the token first
+        const response = await kyInstance.get("/api/get-token");
+        const data = await response.json<{ token: string }>();
+        
+        // Connect user with the token
+        await client.connectUser(
+          {
+            id: user.id,
+            username: user.username,
+            name: user.displayName,
+            image:user.avatarUrl || ""
+          },
+          data.token
+        );
+        
+        setChatClient(client);
+      } catch (error) {
+        console.error("Failed to connect user", error);
+      }
+    };
+
+    connectUser();
 
     return () => {
       setChatClient(null);
