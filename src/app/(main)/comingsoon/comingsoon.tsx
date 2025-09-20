@@ -1,21 +1,41 @@
-// pages/index.js
-"use client"
-import { useState, useEffect } from 'react';
-import Head from 'next/head';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+"use client";
 
-export default function ComingSoon() {
+import InfiniteScrollContainer from "@/components/InfiniteScrollContainer";
+import PostsLoadingSkeleton from "@/components/posts/PostsLoadingSkeleton";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import kyInstance from "@/lib/ky";
+import { PostsPage } from "@/lib/types";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+
+export default function Comingsoon() {
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetching,
+    isFetchingNextPage,
+    status,
+  } = useInfiniteQuery({
+    queryKey: ["post-feed", "bookmarks"],
+    queryFn: ({ pageParam }) =>
+      kyInstance
+        .get(
+          "/api/posts/bookmarked",
+          pageParam ? { searchParams: { cursor: pageParam } } : {},
+        )
+        .json<PostsPage>(),
+    initialPageParam: null as string | null,
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+  });
   const [countdown, setCountdown] = useState({
     days: 30,
     hours: 12,
     minutes: 45,
     seconds: 18
   });
-
-  const [email, setEmail] = useState('');
-
   useEffect(() => {
     const timer = setInterval(() => {
       setCountdown(prev => {
@@ -32,11 +52,7 @@ export default function ComingSoon() {
     return () => clearInterval(timer);
   }, []);
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    alert(`Thank you for subscribing with ${email}! We'll keep you updated.`);
-    setEmail('');
-  };
+
 
   const currentFeatures = [
     "Send messages to other users",
@@ -77,16 +93,35 @@ export default function ComingSoon() {
       icon: "🛒"
     }
   ];
+  const posts = data?.pages.flatMap((page) => page.posts) || [];
+
+  if (status === "pending") {
+    return <PostsLoadingSkeleton />;
+  }
+
+  if (status === "success" && !posts.length && !hasNextPage) {
+    return (
+      // <p className="text-center text-muted-foreground">
+      //   You don&apos;t have any bookmarks yet.
+      // </p>
+      <></>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <p className="text-center text-destructive">
+        An error occurred while loading bookmarks.
+      </p>
+    );
+  }
 
   return (
-    <>
-      <Head>
-        <title>SportsConnect - Coming Soon</title>
-        <meta name="description" content="The LinkedIn for Sports - Coming Soon" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 to-indigo-950 text-white flex flex-col items-center justify-center p-4">
+    <InfiniteScrollContainer
+      className="space-y-5"
+      onBottomReached={() => hasNextPage && !isFetching && fetchNextPage()}
+    >
+ <div className="min-h-screen bg-gradient-to-br from-blue-900 to-indigo-950 text-white flex flex-col items-center justify-center p-4">
         <div className="w-full max-w-6xl bg-white/5 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden border border-white/10">
           {/* Header */}
           <header className="bg-gradient-to-r from-blue-800 to-indigo-800 p-8 text-center">
@@ -183,27 +218,11 @@ export default function ComingSoon() {
               Be the first to know when we launch our new features. Subscribe to our newsletter for updates and exclusive early access.
             </p>
             
-            <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-xl mx-auto">
-              <Input
-                type="email"
-                placeholder="Enter your email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="flex-grow bg-white/10 border-white/20 text-white placeholder:text-blue-200"
-              />
-              <Button type="submit" className="bg-orange-500 hover:bg-orange-600">
-                Subscribe
-              </Button>
-            </form>
+         </div>
           </div>
-          
-          {/* Footer */}
-          <footer className="p-6 text-center text-blue-200 text-sm">
-            <p>&copy; 2023 SportsConnect. All rights reserved.</p>
-          </footer>
-        </div>
-      </div>
-    </>
+          </div>
+   
+    </InfiniteScrollContainer>
   );
 }
+
