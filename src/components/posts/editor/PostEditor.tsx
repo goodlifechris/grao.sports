@@ -43,7 +43,7 @@ export default function PostEditor() {
         italic: false,
       }),
       Placeholder.configure({
-        placeholder: "What's crack-a-lackin'?",
+        placeholder: "#TukutaneGrao Share, what's happening around in sports  ?",
       }),
     ],
   });
