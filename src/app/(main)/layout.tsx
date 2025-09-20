@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import MenuBar from "./MenuBar";
 import Navbar from "./Navbar";
 import SessionProvider from "./SessionProvider";
+import { GoogleTagManager } from '@next/third-parties/google'
 
 export default async function Layout({
   children,
@@ -14,6 +15,10 @@ export default async function Layout({
   if (!session.user) redirect("/login");
 
   return (
+    <>
+          <GoogleTagManager gtmId="G-L1JJMBN6BP" />
+
+
     <SessionProvider value={session}>
       <div className="flex min-h-screen flex-col">
         <Navbar />
@@ -24,5 +29,6 @@ export default async function Layout({
         <MenuBar className="sticky bottom-0 flex w-full justify-center gap-5 border-t bg-card p-3 sm:hidden" />
       </div>
     </SessionProvider>
+    </>
   );
 }
