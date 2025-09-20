@@ -171,9 +171,9 @@ function AvatarInput({ src, onImageCropped }: AvatarInputProps) {
       console.log("No image selected");
       return;
     }
-
+  
     console.log("Original image details - name:", image.name, "size:", image.size, "type:", image.type);
-
+  
     Resizer.imageFileResizer(
       image,
       1024,
@@ -185,12 +185,8 @@ function AvatarInput({ src, onImageCropped }: AvatarInputProps) {
         console.log("Image resized successfully, URI:", uri);
         setImageToCrop(uri as File);
       },
-      "file",
-      undefined,
-      undefined,
-      (error) => {
-        console.error("Image resizing failed:", error);
-      }
+      "file"
+      // Remove the extra undefined arguments that were causing the error
     );
   }
 
