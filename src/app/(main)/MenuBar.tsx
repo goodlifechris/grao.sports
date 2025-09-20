@@ -6,6 +6,7 @@ import { Bookmark, Home } from "lucide-react";
 import Link from "next/link";
 import MessagesButton from "./MessagesButton";
 import NotificationsButton from "./NotificationsButton";
+import Comingsoon from "./comingsoon/comingsoon";
 
 interface MenuBarProps {
   className?: string;
@@ -60,9 +61,9 @@ export default async function MenuBar({ className }: MenuBarProps) {
         title="Games Around"
         asChild
       >
-        <Link href="/bookmarks">
-          <Bookmark />
-          <span className="hidden lg:inline">Games around</span>
+        <Link href="/comingsoon">
+          <Comingsoon />
+          <span className="hidden lg:inline">Coming soon</span>
         </Link>
       </Button>
     </div>
