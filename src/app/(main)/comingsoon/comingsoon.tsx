@@ -106,7 +106,7 @@ export default function Comingsoon() {
       // </p>
     //   <></>
     // );
-  }
+  // }
 
   // if (status === "error") {
   //   return (
