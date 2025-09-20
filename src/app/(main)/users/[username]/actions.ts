@@ -9,17 +9,30 @@ import {
   UpdateUserProfileValues,
 } from "@/lib/validation";
 
-export async function updateUserProfile(values: UpdateUserProfileValues) {
+export async function updateUserProfile(
+  values: UpdateUserProfileValues & { avatarUrl?: string }
+) {
   const validatedValues = updateUserProfileSchema.parse(values);
 
   const { user } = await validateRequest();
 
   if (!user) throw new Error("Unauthorized");
 
+  // Prepare update data
+  const updateData: any = {
+    displayName: validatedValues.displayName,
+    bio: validatedValues.bio,
+  };
+
+  // Only update avatarUrl if provided
+  if (values.avatarUrl) {
+    updateData.avatarUrl = values.avatarUrl;
+  }
+
   // Update database
   const updatedUser = await prisma.user.update({
     where: { id: user.id },
-    data: validatedValues,
+    data: updateData,
     select: getUserDataSelect(user.id),
   });
 
@@ -29,12 +42,12 @@ export async function updateUserProfile(values: UpdateUserProfileValues) {
       id: user.id,
       set: {
         name: validatedValues.displayName,
-        // username: validatedValues.username,
+        // Optional: update avatar in Stream too if you want
+        // image: values.avatarUrl || updatedUser.avatarUrl,
       },
     });
   } catch (error) {
     console.error("Stream update failed:", error);
-    // Consider logging to a monitoring service
   }
 
   return updatedUser;
