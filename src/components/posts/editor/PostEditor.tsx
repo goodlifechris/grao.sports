@@ -43,7 +43,7 @@ export default function PostEditor() {
         italic: false,
       }),
       Placeholder.configure({
-        placeholder: "#TukutaneGrao Share, what's happening around in sports  ?",
+        placeholder: "What's happening?",
       }),
     ],
   });
