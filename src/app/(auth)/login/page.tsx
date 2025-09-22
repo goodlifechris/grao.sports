@@ -17,7 +17,7 @@ export default function Page() {
 
 
   return (
-    <main className="items-center justify-center p-5 bg-white">
+    <main className="items-center justify-center bg-white">
             <>
           <HeroSection  />
           <FeaturesSection />

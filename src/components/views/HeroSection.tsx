@@ -12,7 +12,7 @@ const HeroSection = (
 
 ) => {
   return (
-    <section className="max-w-7xl mx-auto px-6 py-20 md:py-32">
+    <section className=" mx-auto px-6 py-20">
       <div className="grid md:grid-cols-2 gap-12 items-center">
         <div className="space-y-8">
           <div className="space-y-4">
@@ -36,16 +36,10 @@ const HeroSection = (
             >
               Join the Community
             </Button>
-            {/* <Button 
-              variant="outline" 
-              size="lg"
-              className="border-green-200 text-green-700 hover:bg-green-50 px-8 py-4 text-lg"
-            >
-              Learn More
-            </Button> */}
+       
           </div>
           
-          <div className="flex items-center space-x-8 pt-6">
+          <div className="flex flex-wrap pt-6">
             <div className="flex items-center space-x-2">
               <Users className="w-5 h-5 text-green-600" />
               <span className="text-gray-600">1,000+ Athletes</span>
