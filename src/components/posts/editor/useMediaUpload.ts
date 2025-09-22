@@ -67,11 +67,12 @@ export default function useMediaUpload() {
       setIsUploading(false);
     },
     onUploadError: (e) => {
+      console.error("UploadThing error:", e);
       setAttachments((prev) => prev.filter((a) => !a.isUploading));
       setIsUploading(false);
       toast({
         variant: "destructive",
-        description: e.message || "Upload failed",
+        description: e.toString() || "Upload failed",
       });
     },
   });
