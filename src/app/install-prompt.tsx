@@ -8,8 +8,8 @@ export default function InstallPrompt() {
 
   useEffect(() => {
     const handler = (e: Event) => {
+      console.log('🔥 beforeinstallprompt fired');
       e.preventDefault();
-      // Store the event for triggering later
       setDeferredPrompt(e as any);
       setShowPrompt(true);
     };
@@ -23,12 +23,9 @@ export default function InstallPrompt() {
 
   async function handleInstall() {
     if (!deferredPrompt) return;
-
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
     console.log('User install choice:', outcome);
-
-    // Reset prompt
     setDeferredPrompt(null);
     setShowPrompt(false);
   }
