@@ -72,35 +72,42 @@ export async function POST(
       return Response.json({ error: "Post not found" }, { status: 404 });
     }
 
-    await prisma.$transaction([
-      prisma.like.upsert({
-        where: {
-          userId_postId: {
-            userId: loggedInUser.id,
-            postId,
-          },
-        },
-        create: {
+    // First, check if the like already exists
+    const existingLike = await prisma.like.findUnique({
+      where: {
+        userId_postId: {
           userId: loggedInUser.id,
           postId,
         },
-        update: {},
-      }),
-      ...(loggedInUser.id !== post.userId
-        ? [
-            prisma.notification.create({
-              data: {
-                issuerId: loggedInUser.id,
-                recipientId: post.userId,
-                postId,
-                type: "LIKE",
-              },
-            }),
-          ]
-        : []),
-    ]);
+      },
+    });
 
-    return new Response();
+    // If like doesn't exist, create it and potentially a notification
+    if (!existingLike) {
+      await prisma.$transaction(async (tx) => {
+        // Create the like
+        await tx.like.create({
+          data: {
+            userId: loggedInUser.id,
+            postId,
+          },
+        });
+
+        // Create notification only if it's not the user's own post
+        if (loggedInUser.id !== post.userId) {
+          await tx.notification.create({
+            data: {
+              issuerId: loggedInUser.id,
+              recipientId: post.userId,
+              postId,
+              type: "LIKE",
+            },
+          });
+        }
+      });
+    }
+
+    return new Response(null, { status: 200 });
   } catch (error) {
     console.error(error);
     return Response.json({ error: "Internal server error" }, { status: 500 });

@@ -36,13 +36,13 @@ const HeroSection = (
             >
               Join the Community
             </Button>
-            <Button 
+            {/* <Button 
               variant="outline" 
               size="lg"
               className="border-green-200 text-green-700 hover:bg-green-50 px-8 py-4 text-lg"
             >
               Learn More
-            </Button>
+            </Button> */}
           </div>
           
           <div className="flex items-center space-x-8 pt-6">
