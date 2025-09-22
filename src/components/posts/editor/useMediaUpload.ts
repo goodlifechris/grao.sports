@@ -13,6 +13,7 @@ export default function useMediaUpload() {
   const { toast } = useToast();
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number>();
 
   const { startUpload } = useUploadThing("attachment", {
     onBeforeUploadBegin: (files) => {
@@ -41,6 +42,7 @@ export default function useMediaUpload() {
       return renamedFiles;
     },
     onUploadProgress: (progress) => {
+      setUploadProgress(progress);
       // Update progress for all currently uploading files
       setAttachments((prev) =>
         prev.map((a) =>
@@ -110,12 +112,15 @@ export default function useMediaUpload() {
   const reset = useCallback(() => {
     setAttachments([]);
     setIsUploading(false);
+    setUploadProgress(undefined);
+
   }, []);
 
   return {
     startUpload: handleStartUpload,
     attachments,
     isUploading,
+    uploadProgress,
     removeAttachment,
     reset,
   };
