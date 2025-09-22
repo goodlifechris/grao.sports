@@ -5,7 +5,6 @@ import { useState, useCallback } from "react";
 export interface Attachment {
   file: File;
   mediaId?: string;
-  url?: string;
   isUploading: boolean;
   progress?: number;
 }
@@ -30,12 +29,13 @@ export default function useMediaUpload() {
         );
       });
 
+      // Add new attachments with uploading state
       setAttachments((prev) => [
         ...prev,
-        ...renamedFiles.map((file) => ({
-          file,
-          isUploading: true,
-          progress: 0,
+        ...renamedFiles.map((file) => ({ 
+          file, 
+          isUploading: true, 
+          progress: 0 
         })),
       ]);
 
@@ -43,6 +43,7 @@ export default function useMediaUpload() {
     },
     onUploadProgress: (progress) => {
       setUploadProgress(progress);
+      // Update progress for all currently uploading files
       setAttachments((prev) =>
         prev.map((a) =>
           a.isUploading ? { ...a, progress } : a
@@ -57,8 +58,7 @@ export default function useMediaUpload() {
 
           return {
             ...a,
-            mediaId: uploadResult.serverData?.mediaId,
-            url: uploadResult.url, // ✅ save actual file URL
+            mediaId: uploadResult.serverData.mediaId,
             isUploading: false,
             progress: 100,
           };
@@ -67,46 +67,43 @@ export default function useMediaUpload() {
       setIsUploading(false);
     },
     onUploadError: (e) => {
-      console.error("UploadThing error:", e);
+      // Remove only the failed uploads (those still uploading)
       setAttachments((prev) => prev.filter((a) => !a.isUploading));
       setIsUploading(false);
       toast({
         variant: "destructive",
-        description: e.toString() || "Upload failed",
+        description: e.message || "Upload failed",
       });
     },
   });
 
-  const handleStartUpload = useCallback(
-    async (files: File[]) => {
-      if (isUploading) {
-        toast({
-          variant: "destructive",
-          description: "Please wait for the current upload to finish.",
-        });
-        return;
-      }
+  const handleStartUpload = useCallback(async (files: File[]) => {
+    if (isUploading) {
+      toast({
+        variant: "destructive",
+        description: "Please wait for the current upload to finish.",
+      });
+      return;
+    }
 
-      if (attachments.length + files.length > 5) {
-        toast({
-          variant: "destructive",
-          description: "You can only upload up to 5 attachments per post.",
-        });
-        return;
-      }
+    if (attachments.length + files.length > 5) {
+      toast({
+        variant: "destructive",
+        description: "You can only upload up to 5 attachments per post.",
+      });
+      return;
+    }
 
-      try {
-        await startUpload(files);
-      } catch (error) {
-        console.error("Upload error:", error);
-        toast({
-          variant: "destructive",
-          description: "Failed to start upload",
-        });
-      }
-    },
-    [isUploading, attachments.length, startUpload, toast],
-  );
+    try {
+      await startUpload(files);
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast({
+        variant: "destructive",
+        description: "Failed to start upload",
+      });
+    }
+  }, [isUploading, attachments.length, startUpload, toast]);
 
   const removeAttachment = useCallback((fileName: string) => {
     setAttachments((prev) => prev.filter((a) => a.file.name !== fileName));
@@ -116,6 +113,7 @@ export default function useMediaUpload() {
     setAttachments([]);
     setIsUploading(false);
     setUploadProgress(undefined);
+
   }, []);
 
   return {
