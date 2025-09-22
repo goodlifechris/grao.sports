@@ -11,7 +11,8 @@ export interface Attachment {
 }
 
 // Utility: normalize any UploadThing CDN URL to utfs.io
-function normalizeUrl(url: string) {
+function normalizeUrl(url?: string) {
+  if (!url) return undefined;
   return url.replace(/^https?:\/\/[^/]+\.ufs\.sh/, "https://utfs.io");
 }
 
@@ -53,20 +54,21 @@ export default function useMediaUpload() {
       setAttachments((prev) =>
         prev.map((a) =>
           a.isUploading ? { ...a, progress } : a
-        )
+        ),
       );
     },
 
     onClientUploadComplete: (res) => {
-      // normalize every result once
       const normalizedResults = res.map((r) => ({
         ...r,
-        url: normalizeUrl(r.url),
+        url: normalizeUrl(r.url), // ✅ normalize immediately
       }));
 
       setAttachments((prev) =>
         prev.map((a) => {
-          const uploadResult = normalizedResults.find((r) => r.name === a.file.name);
+          const uploadResult = normalizedResults.find(
+            (r) => r.name === a.file.name,
+          );
           if (!uploadResult) return a;
 
           return {
@@ -76,7 +78,7 @@ export default function useMediaUpload() {
             isUploading: false,
             progress: 100,
           };
-        })
+        }),
       );
 
       setIsUploading(false);
@@ -89,7 +91,7 @@ export default function useMediaUpload() {
 
       toast({
         variant: "destructive",
-        description: e.toString() || "Upload failed",
+        description: e?.message || e.toString() || "Upload failed",
       });
     },
   });
@@ -137,7 +139,11 @@ export default function useMediaUpload() {
 
   return {
     startUpload: handleStartUpload,
-    attachments,
+    // ✅ enforce normalization on read too
+    attachments: attachments.map((a) => ({
+      ...a,
+      url: normalizeUrl(a.url),
+    })),
     isUploading,
     uploadProgress,
     removeAttachment,

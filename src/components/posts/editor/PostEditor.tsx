@@ -209,14 +209,10 @@ function AttachmentPreview({
   onRemoveClick,
 }: AttachmentPreviewProps) {
   const { file, url, isUploading, progress } = attachment;
-
-  // Create a blob URL while uploading or when there's no uploaded url yet.
   const [localBlobUrl, setLocalBlobUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    // If there's already an uploaded url, we don't need a blob preview.
     if (url) {
-      // revoke any leftover blob url
       if (localBlobUrl) {
         URL.revokeObjectURL(localBlobUrl);
         setLocalBlobUrl(null);
@@ -224,7 +220,6 @@ function AttachmentPreview({
       return;
     }
 
-    // create blob preview
     const obj = URL.createObjectURL(file);
     setLocalBlobUrl(obj);
 
@@ -235,9 +230,8 @@ function AttachmentPreview({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [file, url]);
 
-  // choose src: prefer the real uploaded url (normalized by your hook),
-  // otherwise use the blob preview.
-  const src = url ?? localBlobUrl ?? "";
+  // ✅ null fallback instead of ""
+  const src = url ?? localBlobUrl ?? null;
 
   const percent = normalizeProgress(progress);
 
@@ -245,31 +239,33 @@ function AttachmentPreview({
     <div
       className={cn("relative mx-auto size-fit", isUploading && "opacity-50")}
     >
-      {file.type.startsWith("image") ? (
-        // Use unoptimized to avoid next/image loader issues for external domains/blobs
-        <Image
-          src={src}
-          alt="Attachment preview"
-          width={500}
-          height={500}
-          unoptimized
-          className="size-fit max-h-[30rem] rounded-2xl"
-        />
+      {src ? (
+        file.type.startsWith("image") ? (
+          <Image
+            src={src}
+            alt="Attachment preview"
+            width={500}
+            height={500}
+            unoptimized
+            className="size-fit max-h-[30rem] rounded-2xl"
+          />
+        ) : (
+          <video controls className="size-fit max-h-[30rem] rounded-2xl">
+            <source src={src} type={file.type} />
+          </video>
+        )
       ) : (
-        <video controls className="size-fit max-h-[30rem] rounded-2xl">
-          {/* video tag supports both blob and remote URLs */}
-          <source src={src} type={file.type} />
-        </video>
+        // ⏳ safe fallback UI while waiting for blob
+        <div className="flex h-40 w-full items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+          Preview loading…
+        </div>
       )}
 
-      {/* progress overlay while uploading */}
       {isUploading && (
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
           <div className="bg-black/40 rounded-full px-3 py-1 text-sm text-white">
             {percent ?? 0}%
           </div>
-
-          {/* small progress bar at bottom */}
           <div className="absolute left-0 right-0 bottom-0 h-1 bg-background/40">
             <div
               style={{ width: `${percent ?? 0}%` }}
