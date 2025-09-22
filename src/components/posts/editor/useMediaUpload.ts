@@ -10,7 +10,13 @@ export interface Attachment {
   progress?: number;
 }
 
+
+
 export default function useMediaUpload() {
+
+function normalizeUrl(url: string) {
+  return url.replace(/https?:\/\/[^/]*ufs\.sh/, "https://utfs.io");
+}
   const { toast } = useToast();
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -58,7 +64,7 @@ export default function useMediaUpload() {
           return {
             ...a,
             mediaId: uploadResult.serverData?.mediaId,
-            url: uploadResult.url, // ✅ save actual file URL
+            url: normalizeUrl(uploadResult.url), // ✅ always utfs.io
             isUploading: false,
             progress: 100,
           };
