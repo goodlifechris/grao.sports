@@ -5,7 +5,11 @@ import { createUploadthing, FileRouter } from "uploadthing/next";
 import { UploadThingError, UTApi } from "uploadthing/server";
 
 const f = createUploadthing();
-
+function normalizeUrl(url: string) {
+  return url
+    .replace(/^https?:\/\/[^/]*ufs\.sh/, "https://utfs.io")
+    .replace("/f/", `/a/${process.env.NEXT_PUBLIC_UPLOADTHING_APP_ID}/`);
+}
 export const fileRouter = {
   avatar: f({
     image: { maxFileSize: "512KB" },
@@ -62,12 +66,11 @@ export const fileRouter = {
       return {};
     })
     .onUploadComplete(async ({ file }) => {
+      const cleanUrl = normalizeUrl(file.url);
+
       const media = await prisma.media.create({
         data: {
-          url: file.url.replace(
-            "/f/",
-            `/a/${process.env.NEXT_PUBLIC_UPLOADTHING_APP_ID}/`,
-          ),
+          url: cleanUrl,
           type: file.type.startsWith("image") ? "IMAGE" : "VIDEO",
         },
       });
