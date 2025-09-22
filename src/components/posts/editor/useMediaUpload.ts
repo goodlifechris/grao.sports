@@ -15,7 +15,8 @@ export interface Attachment {
 export default function useMediaUpload() {
 
 function normalizeUrl(url: string) {
-  return url.replace(/https?:\/\/[^/]*ufs\.sh/, "https://utfs.io");
+  let normalized=url.replace(/https?:\/\/[^/]*ufs\.sh/, "https://utfs.io");
+  return normalized
 }
   const { toast } = useToast();
   const [attachments, setAttachments] = useState<Attachment[]>([]);
