@@ -8,8 +8,8 @@ import { extractRouterConfig } from "uploadthing/server";
 import { fileRouter } from "./api/uploadthing/core";
 import "./globals.css";
 import ReactQueryProvider from "./ReactQueryProvider";
-import RegisterSW from './register-sw';
-import InstallPrompt from "./install-prompt";
+import RegisterSW from '@/app/register-sw';
+import InstallPrompt from "@/app/install-prompt";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
