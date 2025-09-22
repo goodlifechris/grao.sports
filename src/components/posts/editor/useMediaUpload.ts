@@ -10,14 +10,12 @@ export interface Attachment {
   progress?: number;
 }
 
-
+// Utility: normalize any UploadThing CDN URL to utfs.io
+function normalizeUrl(url: string) {
+  return url.replace(/^https?:\/\/[^/]+\.ufs\.sh/, "https://utfs.io");
+}
 
 export default function useMediaUpload() {
-
-function normalizeUrl(url: string) {
-  let normalized=url.replace(/https?:\/\/[^/]*ufs\.sh/, "https://utfs.io");
-  return normalized
-}
   const { toast } = useToast();
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -26,6 +24,7 @@ function normalizeUrl(url: string) {
   const { startUpload } = useUploadThing("attachment", {
     onBeforeUploadBegin: (files) => {
       setIsUploading(true);
+
       const renamedFiles = files.map((file) => {
         const extension = file.name.split(".").pop();
         return new File(
@@ -48,6 +47,7 @@ function normalizeUrl(url: string) {
 
       return renamedFiles;
     },
+
     onUploadProgress: (progress) => {
       setUploadProgress(progress);
       setAttachments((prev) =>
@@ -56,27 +56,37 @@ function normalizeUrl(url: string) {
         )
       );
     },
+
     onClientUploadComplete: (res) => {
+      // normalize every result once
+      const normalizedResults = res.map((r) => ({
+        ...r,
+        url: normalizeUrl(r.url),
+      }));
+
       setAttachments((prev) =>
         prev.map((a) => {
-          const uploadResult = res.find((r) => r.name === a.file.name);
+          const uploadResult = normalizedResults.find((r) => r.name === a.file.name);
           if (!uploadResult) return a;
 
           return {
             ...a,
             mediaId: uploadResult.serverData?.mediaId,
-            url: normalizeUrl(uploadResult.url), // ✅ always utfs.io
+            url: uploadResult.url, // ✅ always utfs.io
             isUploading: false,
             progress: 100,
           };
         })
       );
+
       setIsUploading(false);
     },
+
     onUploadError: (e) => {
       console.error("UploadThing error:", e);
       setAttachments((prev) => prev.filter((a) => !a.isUploading));
       setIsUploading(false);
+
       toast({
         variant: "destructive",
         description: e.toString() || "Upload failed",
