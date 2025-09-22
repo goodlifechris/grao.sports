@@ -8,6 +8,8 @@ import { extractRouterConfig } from "uploadthing/server";
 import { fileRouter } from "./api/uploadthing/core";
 import "./globals.css";
 import ReactQueryProvider from "./ReactQueryProvider";
+import RegisterSW from './register-sw';
+import InstallPrompt from "./install-prompt";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -61,7 +63,11 @@ export default function RootLayout({
           </ThemeProvider>
         </ReactQueryProvider>
         <Toaster />
+        <RegisterSW />
+        <InstallPrompt />
+
       </body>
+
     </html>
   );
 }

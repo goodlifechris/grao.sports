@@ -6,23 +6,50 @@ const nextConfig = {
     },
   },
   serverExternalPackages: ["@node-rs/argon2"],
+
   images: {
-    
     remotePatterns: [
       {
         protocol: "https",
         hostname: "utfs.io",
         port: '',
-        // pathname: `/a/${process.env.NEXT_PUBLIC_UPLOADTHING_APP_ID}/*`,
         pathname: `/**`,
       },
     ],
   },
-  rewrites: () => {
+
+  rewrites: async () => {
     return [
       {
         source: "/hashtag/:tag",
         destination: "/search?q=%23:tag",
+      },
+    ];
+  },
+
+  async headers() {
+    return [
+      {
+        source: '/sw.js',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate',
+          },
+          {
+            key: 'Content-Type',
+            value: 'application/javascript; charset=utf-8',
+          },
+        ],
+      },
+      {
+        source: '/manifest.json',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/manifest+json',
+          },
+        ],
       },
     ];
   },
