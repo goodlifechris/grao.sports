@@ -11,7 +11,7 @@ import StarterKit from "@tiptap/starter-kit";
 import { useDropzone } from "@uploadthing/react";
 import { ImageIcon, Loader2, X } from "lucide-react";
 import Image from "next/image";
-import { ClipboardEvent, useRef } from "react";
+import { ClipboardEvent, useRef, useEffect, useState } from "react";
 import { useSubmitPostMutation } from "./mutations";
 import "./styles.css";
 import useMediaUpload, { Attachment } from "./useMediaUpload";
@@ -68,11 +68,13 @@ export default function PostEditor() {
     );
   }
 
-  function onPaste(e: ClipboardEvent<HTMLInputElement>) {
-    const files = Array.from(e.clipboardData.items)
+  // Accept any clipboard event (editor/paste may use a different element type)
+  function onPaste(e: ClipboardEvent<any>) {
+    const files = Array.from(e.clipboardData?.items || [])
       .filter((item) => item.kind === "file")
-      .map((item) => item.getAsFile()) as File[];
-    startUpload(files);
+      .map((item) => item.getAsFile())
+      .filter(Boolean) as File[];
+    if (files.length) startUpload(files);
   }
 
   return (
@@ -91,23 +93,27 @@ export default function PostEditor() {
           <input {...getInputProps()} />
         </div>
       </div>
+
       {!!attachments.length && (
         <AttachmentPreviews
           attachments={attachments}
           removeAttachment={removeAttachment}
         />
       )}
+
       <div className="flex items-center justify-end gap-3">
         {isUploading && (
           <>
-            <span className="text-sm">{uploadProgress ?? 0}%</span>
+            <span className="text-sm">{uploadProgressDisplay(uploadProgress)}%</span>
             <Loader2 className="size-5 animate-spin text-primary" />
           </>
         )}
+
         <AddAttachmentsButton
           onFilesSelected={startUpload}
           disabled={isUploading || attachments.length >= 5}
         />
+
         <LoadingButton
           onClick={onSubmit}
           loading={mutation.isPending}
@@ -120,6 +126,8 @@ export default function PostEditor() {
     </div>
   );
 }
+
+/* ---------- AddAttachmentsButton ---------- */
 
 interface AddAttachmentsButtonProps {
   onFilesSelected: (files: File[]) => void;
@@ -153,13 +161,16 @@ function AddAttachmentsButton({
           const files = Array.from(e.target.files || []);
           if (files.length) {
             onFilesSelected(files);
-            e.target.value = "";
+            // reset input so re-selecting same file triggers change
+            e.currentTarget.value = "";
           }
         }}
       />
     </>
   );
 }
+
+/* ---------- AttachmentPreviews & AttachmentPreview ---------- */
 
 interface AttachmentPreviewsProps {
   attachments: Attachment[];
@@ -194,28 +205,80 @@ interface AttachmentPreviewProps {
 }
 
 function AttachmentPreview({
-  attachment: { file, mediaId, isUploading },
+  attachment,
   onRemoveClick,
 }: AttachmentPreviewProps) {
-  const src = URL.createObjectURL(file);
+  const { file, url, isUploading, progress } = attachment;
+
+  // Create a blob URL while uploading or when there's no uploaded url yet.
+  const [localBlobUrl, setLocalBlobUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    // If there's already an uploaded url, we don't need a blob preview.
+    if (url) {
+      // revoke any leftover blob url
+      if (localBlobUrl) {
+        URL.revokeObjectURL(localBlobUrl);
+        setLocalBlobUrl(null);
+      }
+      return;
+    }
+
+    // create blob preview
+    const obj = URL.createObjectURL(file);
+    setLocalBlobUrl(obj);
+
+    return () => {
+      URL.revokeObjectURL(obj);
+      setLocalBlobUrl(null);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [file, url]);
+
+  // choose src: prefer the real uploaded url (normalized by your hook),
+  // otherwise use the blob preview.
+  const src = url ?? localBlobUrl ?? "";
+
+  const percent = normalizeProgress(progress);
 
   return (
     <div
       className={cn("relative mx-auto size-fit", isUploading && "opacity-50")}
     >
       {file.type.startsWith("image") ? (
+        // Use unoptimized to avoid next/image loader issues for external domains/blobs
         <Image
           src={src}
           alt="Attachment preview"
           width={500}
           height={500}
+          unoptimized
           className="size-fit max-h-[30rem] rounded-2xl"
         />
       ) : (
         <video controls className="size-fit max-h-[30rem] rounded-2xl">
+          {/* video tag supports both blob and remote URLs */}
           <source src={src} type={file.type} />
         </video>
       )}
+
+      {/* progress overlay while uploading */}
+      {isUploading && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+          <div className="bg-black/40 rounded-full px-3 py-1 text-sm text-white">
+            {percent ?? 0}%
+          </div>
+
+          {/* small progress bar at bottom */}
+          <div className="absolute left-0 right-0 bottom-0 h-1 bg-background/40">
+            <div
+              style={{ width: `${percent ?? 0}%` }}
+              className="h-full bg-primary transition-all"
+            />
+          </div>
+        </div>
+      )}
+
       {!isUploading && (
         <button
           onClick={onRemoveClick}
@@ -226,4 +289,17 @@ function AttachmentPreview({
       )}
     </div>
   );
+}
+
+/* ---------- Helpers ---------- */
+
+function normalizeProgress(p?: number) {
+  if (p == null) return undefined;
+  // If uploader sends 0..1, convert to 0..100
+  if (p >= 0 && p <= 1) return Math.round(p * 100);
+  return Math.round(p);
+}
+
+function uploadProgressDisplay(p?: number) {
+  return normalizeProgress(p) ?? 0;
 }
