@@ -38,7 +38,7 @@ self.addEventListener("push", (event) => {
       self.registration.showNotification(data.title || "New Notification", {
         body: data.body || "You have a new message!",
         icon: "/icon-192x192.png",
-        badge: "/badge966.png",
+        badge: "/badge.svg",
         data, // ✅ pass the entire object so we can use it later
       })
       // await self.registration.showNotification("Hello!", {
