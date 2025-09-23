@@ -1,3 +1,4 @@
+//src/app/main/notifications/notifications.tsx
 "use client";
 
 import InfiniteScrollContainer from "@/components/InfiniteScrollContainer";
@@ -12,6 +13,8 @@ import {
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import Notification from "./Notification";
+import NotificationsButton from "../NotificationsButton";
+import EnableNotifications from "./EnableNotifications";
 
 export default function Notifications() {
   const {
@@ -60,9 +63,13 @@ export default function Notifications() {
 
   if (status === "success" && !notifications.length && !hasNextPage) {
     return (
+
+      <>
+
       <p className="text-center text-muted-foreground">
         You don&apos;t have any notifications yet.
       </p>
+      </>
     );
   }
 
@@ -79,6 +86,8 @@ export default function Notifications() {
       className="space-y-5"
       onBottomReached={() => hasNextPage && !isFetching && fetchNextPage()}
     >
+            <EnableNotifications/>
+
       {notifications.map((notification) => (
         <Notification key={notification.id} notification={notification} />
       ))}
