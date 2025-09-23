@@ -39,8 +39,42 @@ self.addEventListener("push", (event) => {
         body: data.body || "You have a new message!",
         icon: "/icon-192x192.png",
         badge: "/badge.png",
-        data, // ✅ pass the entire object so we can use it later
+        data,
+        image: "/icon-152x152.png",         // banner-style image (large)
+        tag: "chat-msg-123",             // collapse/replace notifications with same tag
+        renotify: true,                  // vibrate again if same tag is reused
+        requireInteraction: true,        // stays until user interacts (desktop only)
+        silent: true,                   // disable sound/vibration if true
+        timestamp: Date.now(),           // custom timestamp shown in UI
+        actions: [                       // action buttons
+          { action: "open", title: "Open App", icon: "/icon-192x192.png" },
+          { action: "dismiss", title: "Dismiss", icon: "/icon-192x192.png" }
+        ],
+        vibrate: [200, 100, 200],        // custom vibration pattern (Android only)
+        dir: "ltr",                      // or "rtl" for right-to-left
+        lang: "en-US",                   // language hint
+        // ✅ pass the entire object so we can use it later
       })
+
+      // self.registration.showNotification(title, {
+      //   body: "Message body text",
+      //   icon: "/icon-192x192.png",       // big colorful icon (expanded notification)
+      //   badge: "/badge.png",             // small monochrome icon (status bar, Android)
+      //   image: "/big-image.jpg",         // banner-style image (large)
+      //   tag: "chat-msg-123",             // collapse/replace notifications with same tag
+      //   renotify: true,                  // vibrate again if same tag is reused
+      //   requireInteraction: true,        // stays until user interacts (desktop only)
+      //   silent: false,                   // disable sound/vibration if true
+      //   timestamp: Date.now(),           // custom timestamp shown in UI
+      //   data: { url: "/main/notifications", postId: "123" }, // custom payload
+      //   actions: [                       // action buttons
+      //     { action: "open", title: "Open App", icon: "/icons/open.png" },
+      //     { action: "dismiss", title: "Dismiss", icon: "/icons/close.png" }
+      //   ],
+      //   vibrate: [200, 100, 200],        // custom vibration pattern (Android only)
+      //   dir: "ltr",                      // or "rtl" for right-to-left
+      //   lang: "en-US",                   // language hint
+      // });
       // await self.registration.showNotification("Hello!", {
       //   body: "This is a minimal test notification",
       // });
