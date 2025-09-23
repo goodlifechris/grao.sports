@@ -15,6 +15,7 @@ import UserTooltip from "../UserTooltip";
 import BookmarkButton from "./BookmarkButton";
 import LikeButton from "./LikeButton";
 import PostMoreButton from "./PostMoreButton";
+import { X, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface PostProps {
   post: PostData;
@@ -99,17 +100,31 @@ interface MediaPreviewsProps {
 }
 
 function MediaPreviews({ attachments }: MediaPreviewsProps) {
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+
   return (
-    <div
-      className={cn(
-        "flex flex-col gap-3",
-        attachments.length > 1 && "sm:grid sm:grid-cols-2",
+    <>
+      <div
+        className={cn(
+          "flex flex-col gap-3",
+          attachments.length > 1 && "sm:grid sm:grid-cols-2"
+        )}
+      >
+        {attachments.map((m, idx) => (
+          <div key={m.id} onClick={() => setActiveIndex(idx)} className="cursor-pointer">
+            <MediaPreview media={m} />
+          </div>
+        ))}
+      </div>
+
+      {activeIndex !== null && (
+        <FullscreenCarousel
+          attachments={attachments}
+          startIndex={activeIndex}
+          onClose={() => setActiveIndex(null)}
+        />
       )}
-    >
-      {attachments.map((m) => (
-        <MediaPreview key={m.id} media={m} />
-      ))}
-    </div>
+    </>
   );
 }
 
@@ -159,5 +174,76 @@ function CommentButton({ post, onClick }: CommentButtonProps) {
         <span className="hidden sm:inline">comments</span>
       </span>
     </button>
+  );
+}
+
+function FullscreenCarousel({
+  attachments,
+  startIndex,
+  onClose,
+}: {
+  attachments: Media[];
+  startIndex: number;
+  onClose: () => void;
+}) {
+  const [current, setCurrent] = useState(startIndex);
+
+  const prev = () =>
+    setCurrent((c) => (c === 0 ? attachments.length - 1 : c - 1));
+  const next = () =>
+    setCurrent((c) => (c === attachments.length - 1 ? 0 : c + 1));
+
+  const currentMedia = attachments[current];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
+      {/* Close button */}
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 rounded-full bg-black/50 p-2 text-white hover:bg-black"
+      >
+        <X size={24} />
+      </button>
+
+      {/* Prev button */}
+      {attachments.length > 1 && (
+        <button
+          onClick={prev}
+          className="absolute left-4 rounded-full bg-black/50 p-2 text-white hover:bg-black"
+        >
+          <ChevronLeft size={32} />
+        </button>
+      )}
+
+      {/* Media */}
+      <div className="max-h-[90vh] max-w-[90vw]">
+        {currentMedia.type === "IMAGE" ? (
+          <Image
+            src={currentMedia.url}
+            alt="Fullscreen attachment"
+            width={1200}
+            height={800}
+            className="mx-auto max-h-[90vh] w-auto rounded-lg object-contain"
+          />
+        ) : (
+          <video
+            src={currentMedia.url}
+            controls
+            autoPlay
+            className="mx-auto max-h-[90vh] w-auto rounded-lg object-contain"
+          />
+        )}
+      </div>
+
+      {/* Next button */}
+      {attachments.length > 1 && (
+        <button
+          onClick={next}
+          className="absolute right-4 rounded-full bg-black/50 p-2 text-white hover:bg-black"
+        >
+          <ChevronRight size={32} />
+        </button>
+      )}
+    </div>
   );
 }
