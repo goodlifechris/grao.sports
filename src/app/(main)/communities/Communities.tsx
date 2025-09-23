@@ -99,7 +99,7 @@ const TournamentCards = () => {
   const tournaments = [
     {
       id: 1,
-      name: "Kothbiro Tournamnet",
+      name: "Kothbiro Tournament",
       date: "July 15-20, 2023",
       teams: 16,
       prize: "$25,000",
