@@ -31,15 +31,16 @@ self.addEventListener("push", (event) => {
 
   console.log("[SW] Parsed data:", data);
 
+
   event.waitUntil(
     (async () => {
       console.log("[SW] Showing notification…");
-      await self.registration.showNotification(data.title || "New Notification", {
+      self.registration.showNotification(data.title || "New Notification", {
         body: data.body || "You have a new message!",
-        icon: "/icon-192x192.png", 
-        badge: "/icon-192x192.png", 
-        data: data.url || "/",
-      });
+        icon: "/icon-192x192.png",
+        badge: "/icon-192x192.png",
+        data, // ✅ pass the entire object so we can use it later
+      })
       // await self.registration.showNotification("Hello!", {
       //   body: "This is a minimal test notification",
       // });
@@ -47,11 +48,45 @@ self.addEventListener("push", (event) => {
     })()
   );
 });
-self.addEventListener("notificationclick", (event) => {
-  logToPage("[SW] Notification clicked");
-  console.log("[SW] Notification clicked:", event.notification);
-
+self.addEventListener("notificationclick", async (event) => {
+  console.log("[SW] Notification click:", event.notification.data);
   event.notification.close();
-  event.waitUntil(clients.openWindow(event.notification.data || "/"));
+
+  const data = event.notification.data || {};
+  const targetUrl = new URL(data.url || "/", self.location.origin).href;
+  console.log("[SW] Notification click:",targetUrl);
+
+
+  event.waitUntil(
+    (async () => {
+      // Get all current client tabs for your origin
+      const allClients = await clients.matchAll({
+        type: "window",
+        includeUncontrolled: true,
+      });
+
+      // Try to find one that’s already open on your domain
+      const existingClient = allClients.find((client) =>
+        client.url.startsWith(self.location.origin)
+      );
+
+      if (existingClient) {
+        // ✅ Focus the already open app window
+        console.log("[SW] Found existing client, focusing:", existingClient.url);
+        await existingClient.focus();
+
+        // Optionally tell the client to navigate (deeplink)
+        existingClient.postMessage({
+          type: "OPEN_URL",
+          url: targetUrl,
+        });
+      } else {
+        // No open client → open a new window
+        console.log("[SW] Opening new window:", targetUrl);
+        await clients.openWindow(targetUrl);
+      }
+    })()
+  );
 });
+
 

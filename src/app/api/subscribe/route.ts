@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import webpush from "web-push";
 
 webpush.setVapidDetails(
-  "mailto:christopherndugodata@gmail.com",
+  process.env.VAPID_SUBJECT || "christopherndugodata@gmail.com",
   process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
   process.env.VAPID_PRIVATE_KEY!
 );
@@ -24,7 +24,7 @@ export async function GET() {
             JSON.stringify({
               title: "Test Notification 🎉",
               body: "This is a test push from your Next.js app",
-              url: "/main/notifications",
+              url: "/messages",
             })
           )
         )

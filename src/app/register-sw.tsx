@@ -2,8 +2,11 @@
 "use client";
 
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function RegisterSW() {
+  const router = useRouter();
+
   useEffect(() => {
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker
@@ -25,12 +28,22 @@ export default function RegisterSW() {
 
       // 🔌 Listen for messages from SW
       navigator.serviceWorker.addEventListener("message", (event) => {
-        if (event.data?.type === "SW_LOG") {
-          console.log(event.data.msg);
+        const data = event.data;
+        if (!data) return;
+
+        if (data.type === "SW_LOG") {
+          console.log("[SW]", data.msg);
+        }
+
+        if (data.type === "OPEN_URL" && data.url) {
+          console.log("[Page] Navigate to:", data.url);
+
+          // Prefer Next.js client-side navigation
+          router.push(data.url);
         }
       });
     }
-  }, []);
+  }, [router]);
 
   return null;
 }
