@@ -9,10 +9,12 @@ import Link from "next/link";
 
 interface NotificationsButtonProps {
   initialState: NotificationCountInfo;
+  onClick?: () => void;
+
 }
 
 export default function NotificationsButton({
-  initialState,
+  initialState,onClick
 }: NotificationsButtonProps) {
   const { data } = useQuery({
     queryKey: ["unread-notification-count"],
@@ -30,6 +32,8 @@ export default function NotificationsButton({
       className="flex items-center justify-start gap-3"
       title="Notifications"
       asChild
+      onClick={onClick}
+
     >
       <Link href="/notifications">
         <div className="relative">

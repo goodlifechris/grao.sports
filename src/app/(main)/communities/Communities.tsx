@@ -141,7 +141,7 @@ const TournamentCards = () => {
                   />
                 </div>
                 <div className="flex-grow flex flex-col md:flex-row md:items-center justify-between">
-                  <h3 className="tournament-name">{tournament.name}</h3>
+                  <h4 className="tournament-name">{tournament.name}</h4>
                   <div
                     className={`status-badge ${tournament.status.toLowerCase().replace(" ", "-")}`}
                   >
