@@ -86,7 +86,7 @@ export default function Notifications() {
       className="space-y-5"
       onBottomReached={() => hasNextPage && !isFetching && fetchNextPage()}
     >
-            <EnableNotifications/>
+            {/* <EnableNotifications/> */}
 
       {notifications.map((notification) => (
         <Notification key={notification.id} notification={notification} />
