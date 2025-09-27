@@ -3,9 +3,9 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Grao',
-    short_name: 'Grao',
-    description: 'A Progressive Web App built with Next.js App Router',
+    name: 'grao',
+    short_name: 'grao',
+    description: 'The social media app for sports enthusiasts',
     start_url: '/',
     display: 'standalone',
     background_color: '#ffffff',
@@ -22,5 +22,15 @@ export default function manifest(): MetadataRoute.Manifest {
         type: 'image/png',
       },
     ],
+    share_target: {
+      action: '/api/share',
+      method: 'POST',
+      enctype: 'application/x-www-form-urlencoded',
+      params: {
+        title: 'title',
+        text: 'text',
+        url: 'url'
+      }
+    }
   };
 }

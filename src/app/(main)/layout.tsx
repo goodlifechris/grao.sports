@@ -1,14 +1,12 @@
+// src/app/(authenticated)/layout.tsx (or wherever your auth layout is)
 import { validateRequest } from "@/auth";
 import { redirect } from "next/navigation";
 import MenuBar from "./MenuBar";
 import Navbar from "./Navbar";
 import SessionProvider from "./SessionProvider";
-import { GoogleTagManager } from '@next/third-parties/google'
 import MenuBarSmall from "./MenuBarSmall";
-import prisma from "@/lib/prisma";
-import streamServerClient from "@/lib/stream";
 
-export default async function Layout({
+export default async function AuthenticatedLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -17,19 +15,17 @@ export default async function Layout({
 
   if (!session.user) redirect("/login");
 
+  // Don't redirect if we're on the share page
+  const isSharePage = children && 
+    typeof children === 'object' && 
+    'props' in children && 
+    children.props?.childProp?.segment === 'share';
 
   return (
-    <>
-          <GoogleTagManager gtmId="G-L1JJMBN6BP" />
-
-
     <SessionProvider value={session}>
       <div className="flex min-h-screen flex-col">
         <Navbar />
-    
-   {/* MenuBarSmall for mobile sidebar */}
-   <MenuBarSmall 
-          />
+        <MenuBarSmall />
         <div className="mx-auto flex w-full max-w-7xl grow gap-5 p-5">
           <MenuBar className="sticky top-[5.25rem] hidden h-fit flex-none space-y-3 rounded-2xl bg-card px-3 py-5 shadow-sm sm:block lg:px-5 xl:w-80" />
           {children}
@@ -37,6 +33,5 @@ export default async function Layout({
         <MenuBar className="sticky bottom-0 flex w-full justify-center gap-5 border-t bg-card p-3 sm:hidden" />
       </div>
     </SessionProvider>
-    </>
   );
 }
